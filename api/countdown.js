@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     const labelColor = req.query.labelColor || '#000000';
     const showLabels = req.query.showLabels === 'true';
     const separator = req.query.separator || ':';
-    const padding = parseInt(req.query.padding || '10', 10);
+    const numberPadding = parseInt(req.query.numberPadding || '0', 10);
 
     const endDate = parseISO(endDateStr);
     const now = new Date();
@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     const seconds = timeLeft % 60;
 
     // Create canvas and context
-    const canvas = createCanvas(400, 200);  // Increased canvas size for additional elements
+    const canvas = createCanvas(400, 200);
     const ctx = canvas.getContext('2d');
 
     // Calculate the total width needed for the text and separators
@@ -34,10 +34,9 @@ module.exports = async (req, res) => {
     const unitValues = [days, hours, minutes, seconds];
     ctx.font = `${fontSize}px ${font}`;
     unitValues.forEach((value) => {
-      totalWidth += ctx.measureText(value.toString()).width;
+      totalWidth += ctx.measureText(value.toString()).width + 2 * numberPadding;
     });
     totalWidth += ctx.measureText(separator).width * (unitValues.length - 1);
-    totalWidth += 2 * padding;
 
     // Resize the canvas width dynamically based on the text width
     canvas.width = totalWidth + 40;
@@ -54,14 +53,14 @@ module.exports = async (req, res) => {
       // Calculate text width for dynamic box sizing
       const textWidth = ctx.measureText(value.toString()).width;
 
-      // Draw numbers
+      // Draw numbers with padding
       ctx.font = `${fontSize}px ${font}`;
       ctx.fillStyle = fontColor;
-      ctx.fillText(value.toString(), xOffset, 50);
+      ctx.fillText(value.toString(), xOffset + numberPadding, 50);
 
       // Draw separator if not the last element
       if (index < unitValues.length - 1) {
-        xOffset += textWidth;
+        xOffset += textWidth + 2 * numberPadding;
         ctx.fillText(separator, xOffset, 50);
         xOffset += ctx.measureText(separator).width;
       }
@@ -71,11 +70,11 @@ module.exports = async (req, res) => {
         ctx.fillStyle = labelColor;
         ctx.font = `14px ${font}`;
         const labelWidth = ctx.measureText(unitLabels[index]).width;
-        ctx.fillText(unitLabels[index], xOffset - textWidth / 2 - labelWidth / 2, 70);  // Center labels below the numbers
+        ctx.fillText(unitLabels[index], xOffset + numberPadding - textWidth / 2 - labelWidth / 2, 70);  // Center labels below the numbers
       }
 
       // Update xOffset for the next unit
-      xOffset += textWidth;
+      xOffset += textWidth + 2 * numberPadding;
     });
 
     // Set response type to PNG
