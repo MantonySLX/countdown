@@ -4,59 +4,48 @@ const { parseISO, differenceInSeconds } = require('date-fns');
 
 module.exports = async (req, res) => {
   try {
-    // Extract query parameters for customization
+    // Get end_date from query parameters
     const endDateStr = req.query.end_date || '';
-
-    // Set the styling to match the uploaded example
-    const fontSize = 36;
-    const font = 'Courier New, Courier, monospace';
-    const fontColor = '#4CAF50';
-    const bgColor = '#ffd54f';
-    const labelColor = '#2196F3';
-    const separator = ':';
-    const numberPadding = 20;
-
-    // Calculate the countdown
     const endDate = parseISO(endDateStr);
     const now = new Date();
     const timeLeft = differenceInSeconds(endDate, now);
+
+    // Calculate days, hours, minutes, seconds
     const days = Math.floor(timeLeft / 86400);
     const hours = Math.floor((timeLeft % 86400) / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
-    const seconds = timeLeft % 60;
+    const seconds = Math.floor(timeLeft % 60);
 
-    // Create canvas and apply styling
-    const canvas = createCanvas(400, 200);
+    // Create canvas and context
+    const canvas = createCanvas(300, 200);
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = bgColor;
+
+    // Apply background color
+    ctx.fillStyle = '#ffd54f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw the countdown numbers and labels
+    // Draw numbers and labels individually with controlled x, y coordinates
     const unitValues = [days, hours, minutes, seconds];
     const unitLabels = ['Days', 'Hours', 'Minutes', 'Seconds'];
     let xOffset = 10;
+
     unitValues.forEach((value, index) => {
-      ctx.font = `${fontSize}px ${font}`;
-      ctx.fillStyle = fontColor;
-      const textValue = value.toString().padStart(2, '0');
-      ctx.fillText(textValue, xOffset, 100);
+      // Draw numbers
+      ctx.font = '24px Arial';
+      ctx.fillStyle = '#333';
+      ctx.fillText(value.toString(), xOffset, 50);
 
       // Draw labels
-      ctx.fillStyle = labelColor;
-      ctx.font = `14px ${font}`;
-      const textMetrics = ctx.measureText(textValue);
-      const labelXOffset = xOffset + (textMetrics.width - ctx.measureText(unitLabels[index]).width) / 2;
-      ctx.fillText(unitLabels[index], labelXOffset, 120);
+      ctx.fillStyle = '#333';
+      ctx.font = '14px Arial';
+      ctx.fillText(unitLabels[index], xOffset, 50 + 30);  // Position labels below the numbers
 
-      const textWidth = ctx.measureText(textValue).width;
-      xOffset += textWidth + numberPadding;
-      if (index < unitValues.length - 1) {
-        ctx.fillText(separator, xOffset, 100);
-        xOffset += ctx.measureText(separator).width + numberPadding;
-      }
+      // Calculate the width of the text to properly space out the next unit
+      const textWidth = ctx.measureText(value.toString()).width;
+      xOffset += textWidth + 40;
     });
 
-    // Set response type and send image
+    // Set response type to PNG
     res.setHeader('Content-Type', 'image/png');
     const buffer = canvas.toBuffer('image/png');
     res.send(buffer);
