@@ -1,5 +1,5 @@
 
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const { parseISO, differenceInSeconds } = require('date-fns');
 
 module.exports = async (req, res) => {
