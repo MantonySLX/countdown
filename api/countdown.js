@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   try {
     // Get end_date and styling parameters from query parameters
     const endDateStr = req.query.end_date || '';
-    const fontSize = req.query.fontSize || '24';
+    const fontSize = parseInt(req.query.fontSize || '24', 10);
     const fontColor = req.query.fontColor || '#000000';
     const font = req.query.font || 'Arial';
     const bgColor = req.query.bgColor || '#FFFFFF';
@@ -23,18 +23,26 @@ module.exports = async (req, res) => {
     const minutes = Math.floor((timeLeft % 3600) / 60);
 
     // Create canvas and context
-    const canvas = createCanvas(300, 100);
+    const canvas = createCanvas(300, 150);
     const ctx = canvas.getContext('2d');
 
     // Apply background color
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Apply font and draw text
+    // Apply font and draw numbers
     ctx.font = `${fontSize}px ${font}`;
     ctx.fillStyle = fontColor;
-    const text = showLabels ? `${days} Days ${hours} Hours ${minutes} Minutes` : `${days}:${hours}:${minutes}`;
-    ctx.fillText(text, 10, 50);
+    const numbersText = `${days} ${hours} ${minutes}`;
+    ctx.fillText(numbersText, 10, 50);
+
+    // Draw labels if showLabels is true
+    if (showLabels) {
+      ctx.fillStyle = labelColor;
+      ctx.font = `14px ${font}`;
+      const labelsText = 'Days Hours Minutes';
+      ctx.fillText(labelsText, 10, 50 + fontSize + 10);  // Position labels below the numbers
+    }
 
     // Set response type to PNG
     res.setHeader('Content-Type', 'image/png');
