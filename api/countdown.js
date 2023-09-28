@@ -30,19 +30,28 @@ module.exports = async (req, res) => {
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Apply font and draw numbers
-    ctx.font = `${fontSize}px ${font}`;
-    ctx.fillStyle = fontColor;
-    const numbersText = `${days} ${hours} ${minutes}`;
-    ctx.fillText(numbersText, 10, 50);
+    // Draw numbers and labels individually with controlled x, y coordinates
+    const unitValues = [days, hours, minutes];
+    const unitLabels = ['Days', 'Hours', 'Minutes'];
+    let xOffset = 10;
 
-    // Draw labels if showLabels is true
-    if (showLabels) {
-      ctx.fillStyle = labelColor;
-      ctx.font = `14px ${font}`;
-      const labelsText = 'Days Hours Minutes';
-      ctx.fillText(labelsText, 10, 50 + fontSize + 10);  // Position labels below the numbers
-    }
+    unitValues.forEach((value, index) => {
+      // Draw numbers
+      ctx.font = `${fontSize}px ${font}`;
+      ctx.fillStyle = fontColor;
+      ctx.fillText(value.toString(), xOffset, 50);
+
+      // Draw labels if showLabels is true
+      if (showLabels) {
+        ctx.fillStyle = labelColor;
+        ctx.font = `14px ${font}`;
+        ctx.fillText(unitLabels[index], xOffset, 50 + fontSize + 10);  // Position labels below the numbers
+      }
+
+      // Calculate the width of the text to properly space out the next unit
+      const textWidth = ctx.measureText(value.toString()).width;
+      xOffset += textWidth + 40;
+    });
 
     // Set response type to PNG
     res.setHeader('Content-Type', 'image/png');
