@@ -29,44 +29,53 @@ module.exports = async (req, res) => {
     const canvas = createCanvas(400, 200);  // Increased canvas size for additional elements
     const ctx = canvas.getContext('2d');
 
+    // Calculate the total width needed for the text and separators
+    let totalWidth = 0;
+    const unitValues = [days, hours, minutes, seconds];
+    ctx.font = `${fontSize}px ${font}`;
+    unitValues.forEach((value) => {
+      totalWidth += ctx.measureText(value.toString()).width;
+    });
+    totalWidth += ctx.measureText(separator).width * (unitValues.length - 1);
+    totalWidth += 2 * padding;
+
+    // Resize the canvas width dynamically based on the text width
+    canvas.width = totalWidth + 40;
+
     // Apply background color
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw numbers, labels, and separators individually with controlled x, y coordinates
-    const unitValues = [days, hours, minutes, seconds];
     const unitLabels = ['Days', 'Hours', 'Minutes', 'Seconds'];
     let xOffset = 10;
 
     unitValues.forEach((value, index) => {
       // Calculate text width for dynamic box sizing
-      ctx.font = `${fontSize}px ${font}`;
       const textWidth = ctx.measureText(value.toString()).width;
 
-      // Draw box around the digit
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(xOffset - padding, 20, textWidth + 2 * padding, fontSize + 2 * padding);
-
       // Draw numbers
+      ctx.font = `${fontSize}px ${font}`;
       ctx.fillStyle = fontColor;
       ctx.fillText(value.toString(), xOffset, 50);
 
       // Draw separator if not the last element
       if (index < unitValues.length - 1) {
-        xOffset += textWidth + padding;
+        xOffset += textWidth;
         ctx.fillText(separator, xOffset, 50);
-        xOffset += ctx.measureText(separator).width + padding;
+        xOffset += ctx.measureText(separator).width;
       }
 
       // Draw labels if showLabels is true
       if (showLabels) {
         ctx.fillStyle = labelColor;
         ctx.font = `14px ${font}`;
-        ctx.fillText(unitLabels[index], xOffset - textWidth / 2, 50 + fontSize + 10);  // Center labels below the numbers
+        const labelWidth = ctx.measureText(unitLabels[index]).width;
+        ctx.fillText(unitLabels[index], xOffset - textWidth / 2 - labelWidth / 2, 70);  // Center labels below the numbers
       }
 
       // Update xOffset for the next unit
-      xOffset += textWidth + padding;
+      xOffset += textWidth;
     });
 
     // Set response type to PNG
