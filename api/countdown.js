@@ -12,45 +12,61 @@ module.exports = async (req, res) => {
     const bgColor = req.query.bgColor || '#FFFFFF';
     const labelColor = req.query.labelColor || '#000000';
     const showLabels = req.query.showLabels === 'true';
+    const separator = req.query.separator || ':';
+    const padding = parseInt(req.query.padding || '10', 10);
 
     const endDate = parseISO(endDateStr);
     const now = new Date();
     const timeLeft = differenceInSeconds(endDate, now);
 
-    // Calculate days, hours, minutes
+    // Calculate days, hours, minutes, seconds
     const days = Math.floor(timeLeft / 86400);
     const hours = Math.floor((timeLeft % 86400) / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
+    const seconds = timeLeft % 60;
 
     // Create canvas and context
-    const canvas = createCanvas(300, 150);
+    const canvas = createCanvas(400, 200);  // Increased canvas size for additional elements
     const ctx = canvas.getContext('2d');
 
     // Apply background color
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw numbers and labels individually with controlled x, y coordinates
-    const unitValues = [days, hours, minutes];
-    const unitLabels = ['Days', 'Hours', 'Minutes'];
+    // Draw numbers, labels, and separators individually with controlled x, y coordinates
+    const unitValues = [days, hours, minutes, seconds];
+    const unitLabels = ['Days', 'Hours', 'Minutes', 'Seconds'];
     let xOffset = 10;
 
     unitValues.forEach((value, index) => {
-      // Draw numbers
+      // Calculate text width for dynamic box sizing
       ctx.font = `${fontSize}px ${font}`;
+      const textWidth = ctx.measureText(value.toString()).width;
+
+      // Draw box around the digit
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(xOffset - padding, 20, textWidth + 2 * padding, fontSize + 2 * padding);
+
+      // Draw numbers
       ctx.fillStyle = fontColor;
       ctx.fillText(value.toString(), xOffset, 50);
+
+      // Draw separator if not the last element
+      if (index < unitValues.length - 1) {
+        xOffset += textWidth + padding;
+        ctx.fillText(separator, xOffset, 50);
+        xOffset += ctx.measureText(separator).width + padding;
+      }
 
       // Draw labels if showLabels is true
       if (showLabels) {
         ctx.fillStyle = labelColor;
         ctx.font = `14px ${font}`;
-        ctx.fillText(unitLabels[index], xOffset, 50 + fontSize + 10);  // Position labels below the numbers
+        ctx.fillText(unitLabels[index], xOffset - textWidth / 2, 50 + fontSize + 10);  // Center labels below the numbers
       }
 
-      // Calculate the width of the text to properly space out the next unit
-      const textWidth = ctx.measureText(value.toString()).width;
-      xOffset += textWidth + 40;
+      // Update xOffset for the next unit
+      xOffset += textWidth + padding;
     });
 
     // Set response type to PNG
